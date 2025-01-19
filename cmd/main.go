@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"strings"
@@ -13,12 +12,14 @@ import (
 )
 
 type app struct {
-	log *slog.Logger
+	log     *slog.Logger
+	scanner *bufio.Scanner
 }
 
 func main() {
 	var app = app{
-		log: logger.New(),
+		log:     logger.New(),
+		scanner: bufio.NewScanner(os.Stdin),
 	}
 	app.startScreen()
 
@@ -31,7 +32,7 @@ func (a *app) startScreen() {
 	doneChan := make(chan struct{})
 
 	// run user input go routine
-	go a.readUserInput(doneChan, os.Stdin)
+	go a.readUserInput(doneChan)
 
 	// block go routine
 	<-doneChan
@@ -58,10 +59,9 @@ func (a *app) prompt() {
 	fmt.Print("-> ")
 }
 
-func (a *app) readUserInput(doneChan chan struct{}, r io.Reader) {
-	scanner := bufio.NewScanner(r)
+func (a *app) readUserInput(doneChan chan struct{}) {
 	for {
-		res, done := a.checkOptions(scanner)
+		res, done := a.checkOptions(a.scanner)
 		if done {
 			doneChan <- struct{}{}
 			return
