@@ -14,12 +14,15 @@ import (
 type app struct {
 	log     *slog.Logger
 	scanner *bufio.Scanner
+	// create channel that indicates user wants to quit
+	doneChan chan struct{}
 }
 
 func main() {
 	var app = app{
-		log:     logger.New(),
-		scanner: bufio.NewScanner(os.Stdin),
+		log:      logger.New(),
+		scanner:  bufio.NewScanner(os.Stdin),
+		doneChan: make(chan struct{}),
 	}
 	app.startScreen()
 
@@ -28,17 +31,15 @@ func main() {
 func (a *app) startScreen() {
 	// print welcome message
 	a.intro()
-	// create channel that indicates user wants to quit
-	doneChan := make(chan struct{})
 
 	// run user input go routine
-	go a.readUserInput(doneChan)
+	go a.readUserInput()
 
 	// block go routine
-	<-doneChan
+	<-a.doneChan
 
 	// close channel
-	close(doneChan)
+	close(a.doneChan)
 
 	// print bye
 	fmt.Print("GoodBye")
@@ -59,11 +60,11 @@ func (a *app) prompt() {
 	fmt.Print("-> ")
 }
 
-func (a *app) readUserInput(doneChan chan struct{}) {
+func (a *app) readUserInput() {
 	for {
 		res, done := a.checkOptions(a.scanner)
 		if done {
-			doneChan <- struct{}{}
+			a.doneChan <- struct{}{}
 			return
 		}
 
