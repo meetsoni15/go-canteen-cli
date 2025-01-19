@@ -84,11 +84,5 @@ func (a *app) checkOptions(scanner *bufio.Scanner) (string, bool) {
 		return "", true
 	}
 
-	// // convert user typed into int
-	// numTocheck, err := strconv.Atoi(input)
-	// if err != nil {
-	// 	return "Please enter whole number", false
-	// }
-
 	return "msg", false
 }
